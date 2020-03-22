@@ -214,3 +214,85 @@ def test_help_commands_private(mockbot, triggerfactory):
     assert mockbot.backend.message_sent[0] == rawlist(
         "PRIVMSG Test :Here is my list of commands:",
     )[0]
+
+
+def test_help_command(mockbot, triggerfactory):
+    provider = providers.Base()
+    provider.setup(mockbot)
+
+    wrapper = triggerfactory.wrapper(
+        mockbot, ':Test!test@example.com PRIVMSG #channel :.help test')
+
+    mockbot.doc['test'] = ([
+            'The command test docstring.',
+            'Second line of docstring.',
+        ], [
+            '.test', '.test arg', '.test else',
+        ]
+    )
+
+    provider.help_command(wrapper, wrapper._trigger, 'test')
+
+    assert mockbot.backend.message_sent == rawlist(
+        "PRIVMSG #channel :Test: The command test docstring.",
+        "PRIVMSG #channel :Second line of docstring.",
+        "PRIVMSG #channel :e.g. .test, .test arg or .test else",
+    )
+
+
+def test_help_command_private(mockbot, triggerfactory):
+    provider = providers.Base()
+    provider.setup(mockbot)
+
+    wrapper = triggerfactory.wrapper(
+        mockbot, ':Test!test@example.com PRIVMSG TestBot :.help test')
+
+    mockbot.doc['test'] = ([
+            'The command test docstring.',
+            'Second line of docstring.',
+        ], [
+            '.test', '.test arg', '.test else',
+        ]
+    )
+
+    provider.help_command(wrapper, wrapper._trigger, 'test')
+
+    assert mockbot.backend.message_sent == rawlist(
+        "PRIVMSG Test :The command test docstring.",
+        "PRIVMSG Test :Second line of docstring.",
+        "PRIVMSG Test :e.g. .test, .test arg or .test else",
+    )
+
+
+def test_help_command_too_long(mockbot, triggerfactory):
+    """
+    bot.reply('The documentation for this command is too long; '
+                'I\'m sending it to you in a private message.')
+    """
+    provider = providers.Base()
+    provider.setup(mockbot)
+
+    wrapper = triggerfactory.wrapper(
+        mockbot, ':Test!test@example.com PRIVMSG #channel :.help test')
+
+    mockbot.doc['test'] = ([
+            'The command test docstring.',
+            'Second line of docstring.',
+            'Third line of docstring.',
+            'Fourth line of docstring.',
+        ], [
+            '.test', '.test arg', '.test else',
+        ]
+    )
+
+    provider.help_command(wrapper, wrapper._trigger, 'test')
+
+    assert mockbot.backend.message_sent == rawlist(
+        "PRIVMSG #channel :Test: The help for this command is too long; "
+        "I'm sending it to you in a private message.",
+        "PRIVMSG Test :The command test docstring.",
+        "PRIVMSG Test :Second line of docstring.",
+        "PRIVMSG Test :Third line of docstring.",
+        "PRIVMSG Test :Fourth line of docstring.",
+        "PRIVMSG Test :e.g. .test, .test arg or .test else",
+    )

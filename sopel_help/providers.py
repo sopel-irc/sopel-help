@@ -34,9 +34,11 @@ class Base(AbstractProvider):
     * generate an help info for one command (head, body, usages)
     """
     DEFAULT_WRAP_WIDTH = 70
+    DEFAULT_THRESHOLD = 3
 
     def __init__(self):
         self.wrap_width = self.DEFAULT_WRAP_WIDTH
+        self.threshold = self.DEFAULT_THRESHOLD
 
     def setup(self, bot):
         """There is no setup (yet)."""
@@ -47,11 +49,12 @@ class Base(AbstractProvider):
 
     def help_command(self, bot, trigger, name):
         command = name.strip().lower()
-        if trigger.nick == trigger.sender:
-            def reply(message):
-                bot.say(message, trigger.nick)
-        else:
-            reply = bot.reply
+        recipient = trigger.sender
+        reply = bot.reply
+        is_private = trigger.nick == trigger.sender
+
+        if is_private:
+            reply = bot.say
 
         if command not in bot.doc:
             reply('Unknown command "%s"' % command)
@@ -61,11 +64,19 @@ class Base(AbstractProvider):
         head, body, usages = self.generate_help_command(
             command, docs, examples)
 
-        reply(head)
+        message_length = len([head] + body) + int(bool(usages))
+        if not is_private and message_length > self.threshold:
+            reply(
+                "The help for this command is too long; "
+                "I'm sending it to you in a private message.")
+            reply = bot.say
+            recipient = trigger.nick
+
+        reply(head, recipient)
         for line in body:
-            bot.say(line)
+            bot.say(line, recipient)
         for line in usages:
-            bot.say(line)
+            bot.say(line, recipient)
 
     def send_help_commands(self, bot, trigger, lines):
         """Send the list of commands in private message."""
