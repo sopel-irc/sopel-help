@@ -135,3 +135,40 @@ class Base(AbstractProvider):
             usages = ['e.g. %s' % usage]
 
         return head.strip(), body, usages
+
+
+class AbstractPublisher(Base):
+    """Abstract provider that publish doc on a pastebin-like service."""
+    DEFAULT_WRAP_WIDTH = 70
+    DEFAULT_THRESHOLD = 3
+    DEFAULT_GROUP_SEPARATOR = '\n\n'
+
+    def __init__(self):
+        super().__init__()
+        self.group_separator = self.DEFAULT_GROUP_SEPARATOR
+
+    def send_help_commands(self, bot, trigger, lines):
+        """Publish doc online and reply with the URL."""
+        content = self.render(bot, trigger, lines)
+        url = self.publish(bot, trigger, content)
+
+        reply = bot.reply
+        if trigger.sender == trigger.nick:
+            reply = bot.say
+
+        reply("I've published a list of my commands at: %s" % url)
+
+    def render(self, bot, trigger, lines):  # pylint: disable=unused-argument
+        """Render document lines as a single text document."""
+        return self.group_separator.join(lines)
+
+    def publish(self, bot, trigger, content):
+        """Publish the content to an online service and return the URL.
+
+        :param bot: Sopel wrapper
+        :param trigger: Trigger for this help command
+        :param str content: Content to publish online
+        :return: The URL to access the published content
+        :rtype: str
+        """
+        raise NotImplementedError
