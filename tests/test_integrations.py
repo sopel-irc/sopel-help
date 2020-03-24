@@ -1,7 +1,7 @@
 """Integration tests for the sopel-help plugin."""
 import pytest
-from sopel.tests import rawlist
 
+from sopel.tests import rawlist
 
 TMP_CONFIG = """
 [core]

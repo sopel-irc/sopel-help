@@ -1,5 +1,37 @@
 """Help providers."""
+import socket
 import textwrap
+import urllib
+
+import requests
+
+from sopel.tools import get_logger
+
+LOGGER = get_logger('help')
+
+
+class PublishingError(Exception):
+    """Generic publishing error."""
+
+
+def _post_content(*args, **kwargs):
+    try:
+        response = requests.post(*args, **kwargs)
+        response.raise_for_status()
+    except (
+            requests.exceptions.Timeout,
+            requests.exceptions.TooManyRedirects,
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError
+    ):
+        # We re-raise all expected exception types to a generic "posting error"
+        # that's easy for callers to expect, and then we pass the original
+        # exception through to provide some debugging info
+        LOGGER.exception('Error during POST request')
+        raise PublishingError('Could not communicate with publishing service')
+
+    # successful response is left to the caller to handle
+    return response
 
 
 class AbstractProvider:
@@ -172,3 +204,81 @@ class AbstractPublisher(Base):
         :rtype: str
         """
         raise NotImplementedError
+
+
+class CLBinPublisher(AbstractPublisher):
+    """Publishing provider using clbin.com"""
+    def publish(self, bot, trigger, content):
+        response = _post_content('https://clbin.com/', data={
+            'clbin': content
+        })
+        return response.text.strip()
+
+
+class NullPointerPublisher(AbstractPublisher):
+    """Publishing provider using 0x0.st"""
+    def publish(self, bot, trigger, content):
+        response = _post_content('https://0x0.st/', data={
+            'file': content
+        })
+        return response.text.strip()
+
+
+class HasteBinPublisher(AbstractPublisher):
+    """Publishing provider using hastebin.com"""
+    def publish(self, bot, trigger, content):
+        response = _post_content('https://hastebin.com/documents', data={
+            'data': content
+        })
+
+        try:
+            result = response.json()
+        except ValueError:
+            LOGGER.error("Invalid Hastebin response %s", response.text)
+            raise PublishingError('Could not parse response from Hastebin!')
+
+        try:
+            key = result['key']
+        except KeyError:
+            LOGGER.error("Invalid Hastebin JSON: %s", result)
+            raise PublishingError('Could not parse response from Hastebin!')
+
+        return "https://hastebin.com/%s" % key
+
+
+class TermBinPublisher(AbstractPublisher):
+    """Publishing provider using termbin.com"""
+    def publish(self, bot, trigger, content):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # the bot may NOT wait forever for a response; that would be bad
+        sock.settimeout(10)
+        try:
+            sock.connect(('termbin.com', 9999))
+            sock.sendall(content)
+            sock.shutdown(socket.SHUT_WR)
+            response = ""
+            while 1:
+                data = sock.recv(1024)
+                if data == "":
+                    break
+                response += data
+            sock.close()
+        except socket.error:
+            LOGGER.exception('Error during communication with termbin')
+            raise PublishingError('Error uploading to termbin')
+
+        return response
+
+
+class UbuntuPublisher(AbstractPublisher):
+    """Publishing provider using pastebin.ubuntu.com"""
+    def publish(self, bot, trigger, content):
+        ubuntu_url = 'https://pastebin.ubuntu.com/'
+        response = _post_content(ubuntu_url, data={
+            'poster': 'sopel',
+            'syntax': 'text',
+            'expiration': '',
+            'content': content,
+        }, allow_redirects=False)
+        location = response.headers['Location']
+        return urllib.parse.urljoin(ubuntu_url, location)

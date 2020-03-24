@@ -1,7 +1,21 @@
 """Sopel Help plugin"""
-from sopel import module
+from sopel import config, module
 
-from .providers import Base
+from .managers import manager
+
+
+def setup(bot):
+    """Setup plugin."""
+    bot.config.define_section('help', HelpSection)
+    manager.setup(bot)
+
+
+class HelpSection(config.types.StaticSection):
+    """Configuration section for this module."""
+    output = config.types.ChoiceAttribute('output',
+                                          manager.provider_names,
+                                          default='base')
+    """The help provider to use for output."""
 
 
 @module.commands('help')
@@ -9,10 +23,7 @@ from .providers import Base
 @module.example('.help help', user_help=True)
 def sopel_help(bot, trigger):
     """Generate help for Sopel's commands."""
-    base = Base()
-    base.setup(bot)
-
     if trigger.group(2):
-        base.help_command(bot, trigger, trigger.group(2))
+        manager.provider.help_command(bot, trigger, trigger.group(2))
     else:
-        base.help_commands(bot, trigger)
+        manager.provider.help_commands(bot, trigger)

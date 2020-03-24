@@ -1,4 +1,4 @@
-.PHONY: quality test coverages coverage_report coverage_html pylint
+.PHONY: qa quality test coverages coverage_report coverage_html pylint
 
 quality:
 	isort -rc sopel_help
@@ -19,3 +19,9 @@ pylint:
 	pylint sopel_help
 
 qa: quality test coverages pylint
+
+.PHONY: develop
+
+develop:
+	pip install -r requirements.txt
+	python setup.py develop
