@@ -11,6 +11,10 @@ enable = coretasks, help
 """
 
 
+CHANNEL_LINE = ':Test!test@example.com PRIVMSG #channel :.help'
+QUERY_LINE = ':Test!test@example.com PRIVMSG TestBot :.help'
+
+
 @pytest.fixture
 def tmpconfig(configfactory):
     return configfactory('test.cfg', TMP_CONFIG)
@@ -19,6 +23,92 @@ def tmpconfig(configfactory):
 @pytest.fixture
 def mockbot(tmpconfig, botfactory):
     return botfactory.preloaded(tmpconfig, preloads=['help'])
+
+
+def test_get_reply_method_default(mockbot, triggerfactory):
+    provider = providers.Base()
+    wrapped = triggerfactory.wrapper(mockbot, CHANNEL_LINE)
+
+    reply, recipient = provider.get_reply_method(wrapped, wrapped._trigger)
+    assert recipient == '#channel'
+
+    reply('Test message.', recipient)
+
+    assert wrapped.backend.message_sent == rawlist(
+        "PRIVMSG #channel :Test: Test message.",
+    )
+
+
+def test_get_reply_method_default_private(mockbot, triggerfactory):
+    provider = providers.Base()
+    wrapped = triggerfactory.wrapper(mockbot, QUERY_LINE)
+
+    reply, recipient = provider.get_reply_method(wrapped, wrapped._trigger)
+    reply('Test message.', recipient)
+
+    assert wrapped.backend.message_sent == rawlist(
+        "PRIVMSG Test :Test message.",
+    )
+
+
+def test_get_reply_method_query(mockbot, triggerfactory):
+    mockbot.settings.help.reply_method = 'query'
+    provider = providers.Base()
+    wrapped = triggerfactory.wrapper(mockbot, CHANNEL_LINE)
+
+    reply, recipient = provider.get_reply_method(wrapped, wrapped._trigger)
+    assert recipient == 'Test'
+
+    reply('Test message.', recipient)
+
+    assert wrapped.backend.message_sent == rawlist(
+        "PRIVMSG Test :Test message.",
+    )
+
+
+def test_get_reply_method_query_private(mockbot, triggerfactory):
+    mockbot.settings.help.reply_method = 'query'
+    provider = providers.Base()
+    wrapped = triggerfactory.wrapper(mockbot, QUERY_LINE)
+
+    reply, recipient = provider.get_reply_method(wrapped, wrapped._trigger)
+    assert recipient == 'Test'
+
+    reply('Test message.', recipient)
+
+    assert wrapped.backend.message_sent == rawlist(
+        "PRIVMSG Test :Test message.",
+    )
+
+
+def test_get_reply_method_notice(mockbot, triggerfactory):
+    mockbot.settings.help.reply_method = 'notice'
+    provider = providers.Base()
+    wrapped = triggerfactory.wrapper(mockbot, CHANNEL_LINE)
+
+    reply, recipient = provider.get_reply_method(wrapped, wrapped._trigger)
+    assert recipient == 'Test'
+
+    reply('Test message.', recipient)
+
+    assert wrapped.backend.message_sent == rawlist(
+        "NOTICE Test :Test message.",
+    )
+
+
+def test_get_reply_method_notice_private(mockbot, triggerfactory):
+    mockbot.settings.help.reply_method = 'notice'
+    provider = providers.Base()
+    wrapped = triggerfactory.wrapper(mockbot, QUERY_LINE)
+
+    reply, recipient = provider.get_reply_method(wrapped, wrapped._trigger)
+    assert recipient == 'Test'
+
+    reply('Test message.', recipient)
+
+    assert wrapped.backend.message_sent == rawlist(
+        "PRIVMSG Test :Test message.",
+    )
 
 
 def test_generate_help_commands():

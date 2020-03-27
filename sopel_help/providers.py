@@ -75,18 +75,33 @@ class Base(AbstractProvider):
     def setup(self, bot):
         """There is no setup (yet)."""
 
+    def get_reply_method(self, bot, trigger):
+        """Define the reply method and its recipient.
+
+        :param bot: Wrapped bot object
+        :type bot: :class:`sopel.bot.SopelWrapper`
+        :param trigger: Trigger to reply to
+        :type: :class:`sopel.trigger.Trigger`
+        """
+        reply = bot.reply
+        recipient = trigger.sender
+
+        if trigger.is_privmsg or bot.settings.help.reply_method == 'query':
+            reply = bot.say
+            recipient = trigger.nick
+        elif bot.settings.help.reply_method == 'notice':
+            reply = bot.notice
+            recipient = trigger.nick
+
+        return reply, recipient
+
     def help_commands(self, bot, trigger):
         lines = self.generate_help_commands(bot.command_groups)
         self.send_help_commands(bot, trigger, lines)
 
     def help_command(self, bot, trigger, name):
         command = name.strip().lower()
-        recipient = trigger.sender
-        reply = bot.reply
-        is_private = trigger.nick == trigger.sender
-
-        if is_private:
-            reply = bot.say
+        reply, recipient = self.get_reply_method(bot, trigger)
 
         if command not in bot.doc:
             reply('Unknown command "%s"' % command)
@@ -97,7 +112,7 @@ class Base(AbstractProvider):
             command, docs, examples)
 
         message_length = len([head] + body) + int(bool(usages))
-        if not is_private and message_length > self.threshold:
+        if recipient != trigger.nick and message_length > self.threshold:
             reply(
                 "The help for this command is too long; "
                 "I'm sending it to you in a private message.")
@@ -112,10 +127,11 @@ class Base(AbstractProvider):
 
     def send_help_commands(self, bot, trigger, lines):
         """Send the list of commands in private message."""
-        if trigger.sender != trigger.nick:
-            bot.reply('I\'ll send you a list of commands in private.')
+        reply, recipient = self.get_reply_method(bot, trigger)
+        if trigger.is_privmsg:
+            reply('Here is my list of commands:', recipient)
         else:
-            bot.say('Here is my list of commands:', trigger.nick)
+            reply('I\'ll send you a list of commands in private.', recipient)
 
         for help_line in lines:
             for line in help_line.split('\n'):
@@ -183,12 +199,8 @@ class AbstractPublisher(Base):
         """Publish doc online and reply with the URL."""
         content = self.render(bot, trigger, lines)
         url = self.publish(bot, trigger, content)
-
-        reply = bot.reply
-        if trigger.sender == trigger.nick:
-            reply = bot.say
-
-        reply("I've published a list of my commands at: %s" % url)
+        reply, recipient = self.get_reply_method(bot, trigger)
+        reply("I've published a list of my commands at: %s" % url, recipient)
 
     def render(self, bot, trigger, lines):  # pylint: disable=unused-argument
         """Render document lines as a single text document."""
