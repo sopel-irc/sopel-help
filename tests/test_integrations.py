@@ -1,7 +1,11 @@
 """Integration tests for the sopel-help plugin."""
+from unittest import mock
+
 import pytest
 
 from sopel.tests import rawlist
+from sopel.tools import get_input
+from sopel_help.plugin import configure
 
 TMP_CONFIG = """
 [core]
@@ -63,3 +67,16 @@ def test_help_command_channel(irc, userfactory):
         "PRIVMSG #sopel :Exirel: Generate help for Sopel's commands.",
         "PRIVMSG #sopel :e.g. .help help or .help",
     )
+
+
+def test_configure(tmpconfig):
+    with mock.patch('sopel.config.types.get_input') as mock_input:
+        mock_input.side_effect = ["ubuntu", "query"]
+        configure(tmpconfig)
+
+    assert 'help' in tmpconfig
+    assert hasattr(tmpconfig.help, 'output')
+    assert hasattr(tmpconfig.help, 'reply_method')
+
+    assert tmpconfig.help.output == 'ubuntu'
+    assert tmpconfig.help.reply_method == 'query'

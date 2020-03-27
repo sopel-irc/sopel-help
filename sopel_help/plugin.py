@@ -10,6 +10,22 @@ def setup(bot):
     manager.setup(bot)
 
 
+def configure(settings):
+    """Configure plugin."""
+    settings.define_section('help', HelpSection)
+    provider_list = ', '.join(manager.provider_names)
+    reply_method_list = ', '.join(HelpSection.REPLY_METHODS)
+    settings.help.configure_setting(
+        'output',
+        'Pick a pastebin provider: {}: '.format(provider_list)
+    )
+    settings.help.configure_setting(
+        'reply_method',
+        'How/where should help command replies be sent: {}? '.format(
+            reply_method_list)
+    )
+
+
 class HelpSection(config.types.StaticSection):
     """Configuration section for this module."""
     REPLY_METHODS = [
