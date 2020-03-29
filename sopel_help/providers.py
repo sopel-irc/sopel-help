@@ -1,4 +1,5 @@
 """Help providers."""
+import hashlib
 import socket
 import textwrap
 import urllib
@@ -194,11 +195,70 @@ class AbstractPublisher(Base):
     def __init__(self):
         super().__init__()
         self.group_separator = self.DEFAULT_GROUP_SEPARATOR
+        self._cached_value = None
+        self._cached_signature = None
+
+    def get_cached_value(self, signature):
+        """Get the cached value from the given ``signature``.
+
+        :param str signature: cache signature
+        :return: the cached value if the signature is still valid;
+                 ``None`` otherwise
+        """
+        if signature != self._cached_signature:
+            return None
+
+        return self._cached_value
+
+    def get_cache_signature(self, bot, trigger, content):
+        """Generate a cache signature from given parameters.
+
+        :param bot: Sopel bot
+        :param trigger: Trigger line
+        :param str content: Help content to sign
+
+        The cache signature is derived from:
+
+        * bot's settings (choosen output)
+        * current content
+        * date of the trigger, to rotate cache every day
+
+        Then it uses a basic sha1 algorithm to sign it all.
+        """
+        payload = (
+            ('output', bot.settings.help.output),
+            ('content', content),
+            ('date', trigger.time.date().isoformat()),
+        )
+        hasher = hashlib.sha1()
+        for key, value in payload:
+            # create "key:value" line to update
+            line = '%s:%s\n' % (key, value.replace(':', '\\:'))
+            hasher.update(line.encode('utf-8'))
+
+        return hasher.hexdigest()
+
+    def save_cache(self, signature, value):
+        """Save the generated URL with its signature.
+
+        :param str signature: cache signature
+        :param str value: value to cache
+        """
+        self._cached_value = value
+        self._cached_signature = signature
 
     def send_help_commands(self, bot, trigger, lines):
         """Publish doc online and reply with the URL."""
         content = self.render(bot, trigger, lines)
-        url = self.publish(bot, trigger, content)
+
+        signature = self.get_cache_signature(bot, trigger, content)
+        url = self.get_cached_value(signature)
+
+        # if cached URL doesn't exist or is invalid, let's generate a new one
+        if not url:
+            url = self.publish(bot, trigger, content)
+            self.save_cache(signature, url)
+
         reply, recipient = self.get_reply_method(bot, trigger)
         reply("I've published a list of my commands at: %s" % url, recipient)
 
