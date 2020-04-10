@@ -1,6 +1,6 @@
 import pytest
-
 from sopel.tests import rawlist
+
 from sopel_help import providers
 
 TMP_CONFIG = """
@@ -354,10 +354,6 @@ def test_help_command_private(mockbot, triggerfactory):
 
 
 def test_help_command_too_long(mockbot, triggerfactory):
-    """
-    bot.reply('The documentation for this command is too long; '
-                'I\'m sending it to you in a private message.')
-    """
     provider = providers.Base()
     provider.setup(mockbot)
 
@@ -377,7 +373,7 @@ def test_help_command_too_long(mockbot, triggerfactory):
     provider.help_command(wrapper, wrapper._trigger, 'test')
 
     assert mockbot.backend.message_sent == rawlist(
-        "PRIVMSG #channel :Test: The help for this command is too long; "
+        "PRIVMSG #channel :Test: The help for command test is too long; "
         "I'm sending it to you in a private message.",
         "PRIVMSG Test :The command test docstring.",
         "PRIVMSG Test :Second line of docstring.",

@@ -1,18 +1,22 @@
 """Help providers."""
 import hashlib
 import socket
-import textwrap
 import urllib
 
 import requests
-
 from sopel.tools import get_logger
+
+from sopel_help import mixins
 
 LOGGER = get_logger('help')
 
 
 class PublishingError(Exception):
     """Generic publishing error."""
+
+
+class UnknownCommand(Exception):
+    """Command is unknown."""
 
 
 def _post_content(*args, **kwargs):
@@ -41,40 +45,75 @@ class AbstractProvider:
     A provider must implement these methods to be used as an Help Provider for
     the Help Sopel plugin.
     """
+    DEFAULT_THRESHOLD = 3
+
+    def get_threshold(self):
+        """Get wrap width parameter."""
+        return self.DEFAULT_THRESHOLD
+
     def setup(self, bot):
         """Setup the provider with the bot's settings.
 
         This will be called at the plugin's setup stage. This can be used to
         store settings, declare custom sections, and so on.
+
+        By default this a no-op method.
+        """
+
+    def generate_help_commands(self, command_groups):
+        """Generate help messages for a set of commands.
+
+        :param dict command_groups: map of (category, commands)
+        :return: generator of help data for each command group
         """
         raise NotImplementedError
 
-    def help_commands(self, bot, trigger):
-        """Handle triggered command to generate help for all commands."""
+    def send_help_commands(self, bot, trigger, lines):
+        """Reply to the user with the help for all commands.
+
+        :param bot: Wrapped bot object
+        :type bot: :class:`sopel.bot.SopelWrapper`
+        :param trigger: Trigger to reply to
+        :type: :class:`sopel.trigger.Trigger`
+        :param list lines: lines of help
+        """
         raise NotImplementedError
 
-    def help_command(self, bot, trigger, name):
-        """Handle triggered command to generate help for one command."""
+    def generate_help_command(self, command, docs, examples):
+        """Generate help message with head, body, and usage examples.
+
+        :param str command: command name, all lower-case
+        :param list docs: list of documentation line for this ``command``
+        :param list examples: list of examples for this ``command``
+        :return: a 3-value tuple with (head, body, usages)
+        """
         raise NotImplementedError
 
+    def send_help_command(self, bot, trigger, command, head, body, usages):
+        """Reply to the user with the help for one command.
 
-class Base(AbstractProvider):
-    """Base help provider for the help plugin.
+        :param bot: Wrapped bot object
+        :type bot: :class:`sopel.bot.SopelWrapper`
+        :param trigger: Trigger to reply to
+        :type: :class:`sopel.trigger.Trigger`
+        :param str head: head message for this command
+        :param list body: body lines
+        :param list usages: usage lines
+        """
+        reply, recipient = self.get_reply_method(bot, trigger)
+        message_length = len([head] + body) + int(bool(usages))
+        if recipient != trigger.nick and message_length > self.get_threshold():
+            reply(
+                "The help for command %s is too long; "
+                "I'm sending it to you in a private message." % command)
+            reply = bot.say
+            recipient = trigger.nick
 
-    A provider can:
-
-    * generate an help text for command groups,
-    * generate an help info for one command (head, body, usages)
-    """
-    DEFAULT_WRAP_WIDTH = 70
-    DEFAULT_THRESHOLD = 3
-
-    def __init__(self):
-        self.wrap_width = self.DEFAULT_WRAP_WIDTH
-        self.threshold = self.DEFAULT_THRESHOLD
-
-    def setup(self, bot):
-        """There is no setup (yet)."""
+        reply(head, recipient)
+        for line in body:
+            bot.say(line, recipient)
+        for line in usages:
+            bot.say(line, recipient)
 
     def get_reply_method(self, bot, trigger):
         """Define the reply method and its recipient.
@@ -96,36 +135,43 @@ class Base(AbstractProvider):
 
         return reply, recipient
 
+    def get_command_doc(self, bot, name):
+        """Retrieve the command, its description and list of examples."""
+        command = name.strip().lower()
+
+        if command not in bot.doc:
+            raise UnknownCommand('Unknown command "%s"' % command)
+
+        return [command] + list(bot.doc[command])
+
     def help_commands(self, bot, trigger):
+        """Handle triggered command to generate help for all commands."""
         lines = self.generate_help_commands(bot.command_groups)
         self.send_help_commands(bot, trigger, lines)
 
     def help_command(self, bot, trigger, name):
-        command = name.strip().lower()
-        reply, recipient = self.get_reply_method(bot, trigger)
+        """Handle triggered command to generate help for one command."""
+        reply, __ = self.get_reply_method(bot, trigger)
 
-        if command not in bot.doc:
-            reply('Unknown command "%s"' % command)
+        try:
+            command, docs, examples = self.get_command_doc(bot, name)
+        except UnknownCommand as error:
+            reply(str(error))
             return
 
-        docs, examples = bot.doc[command]
         head, body, usages = self.generate_help_command(
             command, docs, examples)
+        self.send_help_command(bot, trigger, command, head, body, usages)
 
-        message_length = len([head] + body) + int(bool(usages))
-        if recipient != trigger.nick and message_length > self.threshold:
-            reply(
-                "The help for this command is too long; "
-                "I'm sending it to you in a private message.")
-            reply = bot.say
-            recipient = trigger.nick
 
-        reply(head, recipient)
-        for line in body:
-            bot.say(line, recipient)
-        for line in usages:
-            bot.say(line, recipient)
+class Base(mixins.PlainTextGeneratorMixin, AbstractProvider):
+    """Base help provider for the help plugin.
 
+    A provider can:
+
+    * generate an help text for command groups,
+    * generate an help info for one command (head, body, usages)
+    """
     def send_help_commands(self, bot, trigger, lines):
         """Send the list of commands in private message."""
         reply, recipient = self.get_reply_method(bot, trigger)
@@ -138,55 +184,8 @@ class Base(AbstractProvider):
             for line in help_line.split('\n'):
                 bot.say(line.rstrip(), trigger.nick)
 
-    def generate_help_commands(self, command_groups):
-        """Generate help messages for a set of commands.
 
-        :param dict command_groups: map of (category, commands)
-        :return: generator of help text for each command group
-        """
-        name_length = max(6, max(len(k) for k in command_groups.keys()))
-        indent = ' ' * (name_length + 2)
-
-        for category, commands in sorted(command_groups.items()):
-            # adjust category label to the max length
-            label = category.upper().ljust(name_length)
-            text = '  '.join([label] + sorted(set(commands)))
-            text_wrapped = textwrap.wrap(
-                text, width=self.wrap_width, subsequent_indent=indent)
-            yield '\n'.join(text_wrapped)
-
-    def generate_help_command(self, command, docs, examples):
-        """Generate help message with head, body, and usage examples.
-
-        :param str command: command name, all lower-case
-        :param list docs: list of documentation line for this ``command``
-        :param list examples: list of examples for this ``command``
-        :return: a 3-value tuple with (head, body, usages)
-
-        The ``head`` is a string and it is the first line of the help message.
-        The ``body`` is a list of help lines, and ``usages`` is a list of
-        example lines.
-
-        Note that ``usages`` contains one line only at the moment since we
-        don't manage line length (yet).
-        """
-        head = 'Command "%s" has no help.' % command
-        body = []
-        usages = []
-
-        if docs:
-            # Head is the first line of doc, and the body contains the reminder
-            head, *body = docs
-
-        if examples:
-            # Build a nice, grammatically-correct list of examples
-            usage = ', '.join(examples[:-2] + [' or '.join(examples[-2:])])
-            usages = ['e.g. %s' % usage]
-
-        return head.strip(), body, usages
-
-
-class AbstractPublisher(Base):
+class AbstractPublisher(mixins.PlainTextGeneratorMixin, AbstractProvider):
     """Abstract provider that publish doc on a pastebin-like service."""
     DEFAULT_WRAP_WIDTH = 70
     DEFAULT_THRESHOLD = 3

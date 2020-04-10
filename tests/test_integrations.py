@@ -2,9 +2,9 @@
 from unittest import mock
 
 import pytest
-
 from sopel.tests import rawlist
 from sopel.tools import get_input
+
 from sopel_help.plugin import configure
 
 TMP_CONFIG = """

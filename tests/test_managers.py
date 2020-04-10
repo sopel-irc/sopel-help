@@ -1,6 +1,6 @@
 import pytest
-
 from sopel import config
+
 from sopel_help import managers, providers
 
 TMP_CONFIG = """

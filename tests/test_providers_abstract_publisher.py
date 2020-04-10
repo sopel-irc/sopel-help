@@ -1,8 +1,8 @@
 import time
 
 import pytest
-
 from sopel.tests import rawlist
+
 from sopel_help import providers
 
 TMP_CONFIG = """
