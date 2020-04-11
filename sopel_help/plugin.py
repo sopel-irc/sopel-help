@@ -1,7 +1,8 @@
 """Sopel Help plugin"""
 from sopel import config, module
 
-from .managers import manager
+from sopel_help import providers
+from sopel_help.managers import manager
 
 
 def setup(bot):
@@ -50,6 +51,10 @@ class HelpSection(config.types.StaticSection):
 def sopel_help(bot, trigger):
     """Generate help for Sopel's commands."""
     if trigger.group(2):
-        manager.provider.help_command(bot, trigger, trigger.group(2))
+        try:
+            manager.provider.help_command(bot, trigger, trigger.group(2))
+        except providers.UnknownCommand as error:
+            reply, __ = manager.provider.get_reply_method(bot, trigger)
+            reply(str(error))
     else:
         manager.provider.help_commands(bot, trigger)

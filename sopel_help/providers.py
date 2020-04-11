@@ -151,14 +151,7 @@ class AbstractProvider:
 
     def help_command(self, bot, trigger, name):
         """Handle triggered command to generate help for one command."""
-        reply, __ = self.get_reply_method(bot, trigger)
-
-        try:
-            command, docs, examples = self.get_command_doc(bot, name)
-        except UnknownCommand as error:
-            reply(str(error))
-            return
-
+        command, docs, examples = self.get_command_doc(bot, name)
         head, body, usages = self.generate_help_command(
             command, docs, examples)
         self.send_help_command(bot, trigger, command, head, body, usages)
