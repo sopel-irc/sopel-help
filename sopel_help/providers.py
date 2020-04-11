@@ -42,15 +42,11 @@ def _post_content(*args, **kwargs):
 class AbstractProvider:
     """Help provider abstraction.
 
-    A provider must implement these methods to be used as an Help Provider for
-    the Help Sopel plugin.
+    A provider must implement these methods to be used as an Help Provider:
+
+    * :meth:`help_commands`: provide a list of all commands
+    * :meth:`help_command`: provide help for one command
     """
-    DEFAULT_THRESHOLD = 3
-
-    def get_threshold(self):
-        """Get wrap width parameter."""
-        return self.DEFAULT_THRESHOLD
-
     def setup(self, bot):
         """Setup the provider with the bot's settings.
 
@@ -59,6 +55,36 @@ class AbstractProvider:
 
         By default this a no-op method.
         """
+
+    def help_commands(self, bot, trigger):
+        """Handle triggered command to generate help for all commands."""
+        raise NotImplementedError
+
+    def help_command(self, bot, trigger, name):
+        """Handle triggered command to generate help for one command."""
+        raise NotImplementedError
+
+
+class AbstractGeneratedProvider(AbstractProvider):
+    """Help provider that generate help content for the user on the fly.
+
+    This abstract provider implements a workflow for the list of commands and
+    the help for one command. Subclasses must implement these methods:
+
+    * :meth:`generate_help_commands`: generate lines of help message from
+      command groups
+    * :meth:`send_help_commands`: send the lines of help to the user
+    * :meth:`generate_help_command`: generate a header, a list of body lines,
+      and a list of usage lines for one command
+
+    This abstract provider already implements the :meth:`send_help_command`
+    that sends the head/body/usage to the user.
+    """
+    DEFAULT_THRESHOLD = 3
+
+    def get_threshold(self):
+        """Get wrap width parameter."""
+        return self.DEFAULT_THRESHOLD
 
     def generate_help_commands(self, command_groups):
         """Generate help messages for a set of commands.
@@ -157,14 +183,8 @@ class AbstractProvider:
         self.send_help_command(bot, trigger, command, head, body, usages)
 
 
-class Base(mixins.PlainTextGeneratorMixin, AbstractProvider):
-    """Base help provider for the help plugin.
-
-    A provider can:
-
-    * generate an help text for command groups,
-    * generate an help info for one command (head, body, usages)
-    """
+class Base(mixins.PlainTextGeneratorMixin, AbstractGeneratedProvider):
+    """Base help provider for the help plugin."""
     def send_help_commands(self, bot, trigger, lines):
         """Send the list of commands in private message."""
         reply, recipient = self.get_reply_method(bot, trigger)
@@ -178,7 +198,7 @@ class Base(mixins.PlainTextGeneratorMixin, AbstractProvider):
                 bot.say(line.rstrip(), trigger.nick)
 
 
-class AbstractPublisher(mixins.PlainTextGeneratorMixin, AbstractProvider):
+class AbstractPublisher(mixins.PlainTextGeneratorMixin, AbstractGeneratedProvider):
     """Abstract provider that publish doc on a pastebin-like service."""
     DEFAULT_WRAP_WIDTH = 70
     DEFAULT_THRESHOLD = 3
