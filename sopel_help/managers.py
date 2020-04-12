@@ -30,17 +30,16 @@ class Manager:
         self._provider = None
         self._provider_list = None
 
-    def setup(self, bot):
-        """Setup the manager from the bot's settings.
+    def load_provider(self, name):
+        """Load provider from a name.
 
-        The goal of the setup phase is to fetch the right provider based on the
-        settings provided, load the entry point, setup the provider, and store
-        it so :attr:`provider` is available.
+        :param str name: name of the provider
+        :return: a provider instance
+        :rtype: :class:`sopel_help.providers.AbstractProvider`
+
+        The provider will be loaded from an entry point and then instanciated
+        to be returned as is (no setup, no configure).
         """
-        # 1. get bot's settings's help section's "provider" option
-        name = bot.settings.help.output
-
-        # 2. get the proper provider entrypoint
         entry_points = pkg_resources.iter_entry_points(
             PROVIDERS_ENTRY_POINT, name)
 
@@ -51,13 +50,38 @@ class Manager:
 
         # 3. load the entry point
         provider_maker = entry_point.load()
-        provider = provider_maker()
 
-        # 4. setup the provider
+        return provider_maker()
+
+    def setup(self, bot):
+        """Setup the manager from the bot's settings.
+
+        The goal of the setup phase is to fetch the right provider based on the
+        settings provided, load the entry point, setup the provider, and store
+        it so :attr:`provider` is available.
+        """
+        # 1. get bot's settings's help section's "provider" option
+        name = bot.settings.help.output
+
+        # 2. load the proper provider
+        provider = self.load_provider(name)
+
+        # 3. setup the provider
         provider.setup(bot)
 
-        # 5. store it
+        # 4. store it
         self._provider = provider
+
+    def configure(self, settings):
+        """Configure the provider from the settings."""
+        # 1. get settings's help section's "provider" option
+        name = settings.help.output
+
+        # 2. load the proper provider
+        provider = self.load_provider(name)
+
+        # 3. configure it
+        provider.configure(settings)
 
 
 manager = Manager()  # pylint: disable=invalid-name

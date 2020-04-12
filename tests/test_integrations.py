@@ -80,3 +80,46 @@ def test_configure(tmpconfig):
 
     assert tmpconfig.help.output == 'ubuntu'
     assert tmpconfig.help.reply_method == 'query'
+
+
+def test_configure_local(tmpconfig):
+    with mock.patch('sopel.config.types.get_input') as mock_input:
+        mock_input.side_effect = [
+            "local",
+            "query",
+            "https://example.com/sopel/",
+            "custom.html",
+            "/home/sopel/help",
+        ]
+        configure(tmpconfig)
+
+    assert 'help' in tmpconfig
+    assert hasattr(tmpconfig.help, 'output')
+    assert hasattr(tmpconfig.help, 'reply_method')
+    assert hasattr(tmpconfig.help, 'origin_base_url')
+    assert hasattr(tmpconfig.help, 'origin_output_name')
+    assert hasattr(tmpconfig.help, 'origin_output_dir')
+
+    assert tmpconfig.help.output == 'local'
+    assert tmpconfig.help.reply_method == 'query'
+    assert tmpconfig.help.origin_base_url == 'https://example.com/sopel/'
+    assert tmpconfig.help.origin_output_name == 'custom.html'
+    assert tmpconfig.help.origin_output_dir == '/home/sopel/help'
+
+
+def test_configure_local_default(tmpconfig):
+    with mock.patch('sopel.config.types.get_input') as mock_input:
+        mock_input.side_effect = [
+            "local",
+            "query",
+            "https://example.com/sopel/",
+            "",
+            "",
+        ]
+        configure(tmpconfig)
+
+    assert tmpconfig.help.output == 'local'
+    assert tmpconfig.help.reply_method == 'query'
+    assert tmpconfig.help.origin_base_url == 'https://example.com/sopel/'
+    assert tmpconfig.help.origin_output_name == 'help.html'
+    assert tmpconfig.help.origin_output_dir == '/var/www/html'

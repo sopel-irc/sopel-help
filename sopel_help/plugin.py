@@ -26,6 +26,8 @@ def configure(settings):
             reply_method_list)
     )
 
+    manager.configure(settings)
+
 
 @module.commands('help')
 @module.example('.help', user_help=True)

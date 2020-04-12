@@ -57,6 +57,12 @@ class AbstractProvider:
         By default this a no-op method.
         """
 
+    def configure(self, settings):
+        """Configure the bot's settings for this provider.
+
+        By default this a no-op method.
+        """
+
     def help_commands(self, bot, trigger):
         """Handle triggered command to generate help for all commands."""
         raise NotImplementedError
@@ -231,6 +237,28 @@ class LocalFile(mixins.HTMLGeneratorMixin, AbstractGeneratedProvider):
         self.base_url = bot.settings.help.origin_base_url
         self.output_name = bot.settings.help.origin_output_name
         self.output_dir = bot.settings.help.origin_output_dir
+
+    def configure(self, settings):
+        """Configure the bot's settings for this provider.
+
+        Allow the user to configure these:
+
+        * ``help.origin_base_url``
+        * ``help.origin_output_name``
+        * ``help.origin_output_dir``
+        """
+        settings.help.configure_setting(
+            'origin_base_url',
+            'What is the base URL for the origin server?'
+        )
+        settings.help.configure_setting(
+            'origin_output_name',
+            'What is name of the help file to be generated?'
+        )
+        settings.help.configure_setting(
+            'origin_output_dir',
+            'Where to put the help file? (directory)'
+        )
 
     def save_content(self, content):
         """Save ``content`` to the output dir.
