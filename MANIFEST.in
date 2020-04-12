@@ -1,0 +1,9 @@
+global-exclude *.py[cod]
+recursive-exclude sopel/ *
+recursive-exclude .git/ *
+recursive-exclude .vscode/ *
+recursive-exclude .pytest_cache/ *
+exclude .gitignore
+exclude .pylintrc
+exclude .coverage
+exclude requirements.txt

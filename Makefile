@@ -20,8 +20,13 @@ pylint:
 
 qa: quality test coverages pylint
 
-.PHONY: develop
+.PHONY: develop build
 
 develop:
 	pip install -r requirements.txt
 	python setup.py develop
+
+
+build:
+	rm -rf build/ dist/
+	python setup.py sdist bdist_wheel
