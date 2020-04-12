@@ -1,5 +1,6 @@
 """Help providers."""
 import hashlib
+import os
 import socket
 import urllib
 
@@ -198,7 +199,99 @@ class Base(mixins.PlainTextGeneratorMixin, AbstractGeneratedProvider):
                 bot.say(line.rstrip(), trigger.nick)
 
 
-class AbstractPublisher(mixins.PlainTextGeneratorMixin, AbstractGeneratedProvider):
+class LocalFile(mixins.HTMLGeneratorMixin, AbstractGeneratedProvider):
+    """Local Server provider for the help plugin.
+
+    This provider generate an HTML file on the filesystem and send a URL to
+    the user. This URL is built on the setting ``help.origin_base_url``
+    and ``help.origin_output_name``.
+
+    So for instance if the origin base URL is ``http://example.com/sopel/`` and
+    the origin output name is ``help.html``, the result will looks like this::
+
+        [13:37] Sopel: I've published a list of my commands at
+                       http://example.com/sopel/help.html
+
+    You can control these with:
+
+    * ``help.origin_base_url``: base URL
+    * ``help.origin_output_name``: name of the HTML file
+    * ``help.origin_output_dir``: local directory to publish the file
+
+    Then you have to configure an origin server that can serve this HTML file,
+    like apache, nginx, or lighttpd.
+    """
+    def __init__(self):
+        super().__init__()
+        self.base_url = None
+        self.output_name = None
+        self.output_dir = None
+
+    def setup(self, bot):
+        self.base_url = bot.settings.help.origin_base_url
+        self.output_name = bot.settings.help.origin_output_name
+        self.output_dir = bot.settings.help.origin_output_dir
+
+    def save_content(self, content):
+        """Save ``content`` to the output dir.
+
+        :param str content: HTML content to save to a local directory
+        :return: the name of the file
+        :rtype: str
+
+        You can control:
+
+        * ``help.origin_output_name``: name of the HTML file
+        * ``help.origin_output_dir``: local directory to publish the file
+
+        Note that if the file already exists, its content will be replaced.
+        """
+        filename = os.path.join(self.output_dir, self.output_name)
+        with open(filename, 'w') as helpfd:
+            helpfd.write(content)
+
+        return self.output_name
+
+    def render(self, bot, trigger, lines):  # pylint: disable=unused-argument
+        """Render ``lines`` as an HTML document.
+
+        :param bot: Wrapped bot object
+        :type bot: :class:`sopel.bot.SopelWrapper`
+        :param trigger: Trigger to reply to
+        :type: :class:`sopel.trigger.Trigger`
+        :param list lines: lines of help
+        """
+        template = """<!DOCTYPE html>
+        <html>
+            <head>
+                <title>Sopel Help</title>
+                <meta charset="utf-8">
+            </head>
+            <body>
+            <h1>Sopel Help</h1>
+            {content}
+            </body>
+        </html>
+        """
+
+        content = '\n'.join(
+            '<div>%s</div>' % line
+            for line in lines
+        )
+
+        return template.format(content=content)
+
+    def send_help_commands(self, bot, trigger, lines):
+        content = self.render(bot, trigger, lines)
+        filename = self.save_content(content)
+        url = urllib.parse.urljoin(self.base_url, filename)
+
+        reply, recipient = self.get_reply_method(bot, trigger)
+        reply("I've published a list of my commands at: %s" % url, recipient)
+
+
+class AbstractPublisher(mixins.PlainTextGeneratorMixin,
+                        AbstractGeneratedProvider):
     """Abstract provider that publish doc on a pastebin-like service."""
     DEFAULT_WRAP_WIDTH = 70
     DEFAULT_THRESHOLD = 3

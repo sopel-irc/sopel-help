@@ -20,3 +20,18 @@ class HelpSection(config.types.StaticSection):
                                                 REPLY_METHODS,
                                                 default='channel')
     """Where/how to reply to help commands (public/private)."""
+
+    origin_base_url = config.types.ValidatedAttribute(
+        'origin_base_url',
+        default='')
+    """When using an origin server, what is the base URL to use."""
+
+    origin_output_name = config.types.ValidatedAttribute(
+        'origin_output_name',
+        default='help.html')
+    """How is named the file that will be used to store and publish content."""
+
+    origin_output_dir = config.types.ValidatedAttribute(
+        'origin_output_dir',
+        default='/var/www/html')
+    """Where the file will be put on the server to publish the content."""

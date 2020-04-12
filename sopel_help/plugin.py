@@ -1,7 +1,7 @@
 """Sopel Help plugin"""
 from sopel import module
 
-from sopel_help import providers, config
+from sopel_help import config, providers
 from sopel_help.managers import manager
 
 
@@ -36,7 +36,7 @@ def sopel_help(bot, trigger):
         try:
             manager.provider.help_command(bot, trigger, trigger.group(2))
         except providers.UnknownCommand as error:
-            reply, __ = manager.provider.get_reply_method(bot, trigger)
-            reply(str(error))
+            reply, recipient = manager.provider.get_reply_method(bot, trigger)
+            reply(str(error), recipient)
     else:
         manager.provider.help_commands(bot, trigger)

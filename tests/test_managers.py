@@ -42,6 +42,7 @@ def test_provider_names():
     manager = managers.Manager()
 
     assert 'base' in manager.provider_names
+    assert 'local' in manager.provider_names
     assert 'clbin' in manager.provider_names
     assert '0x0' in manager.provider_names
     assert 'hastebin' in manager.provider_names

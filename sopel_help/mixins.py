@@ -1,4 +1,5 @@
 """Mixins for providers."""
+import html
 import textwrap
 
 
@@ -56,3 +57,26 @@ class PlainTextGeneratorMixin:
             usages = ['e.g. %s' % usage]
 
         return head.strip(), body, usages
+
+
+class HTMLGeneratorMixin(PlainTextGeneratorMixin):
+    """Generator Mixin of HTML text."""
+    def generate_help_commands(self, command_groups):
+        """Generate help messages for a set of commands.
+
+        :param dict command_groups: map of (category, commands)
+        :return: generator of help text for each command group
+        """
+        for category, commands in sorted(command_groups.items()):
+            # adjust category label to the max length
+
+            lines = [
+                '<h2>%s</h2>' % html.escape(category).upper(),
+                '<ul>'
+            ] + [
+                '<li>%s</li>' % html.escape(command)
+                for command in sorted(set(commands))
+            ] + [
+                '</ul>'
+            ]
+            yield ''.join(lines)
