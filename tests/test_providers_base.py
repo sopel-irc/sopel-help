@@ -381,3 +381,34 @@ def test_help_command_too_long(mockbot, triggerfactory):
         "PRIVMSG Test :Fourth line of docstring.",
         "PRIVMSG Test :e.g. .test, .test arg or .test else",
     )
+
+
+def test_help_command_too_long_settings(mockbot, triggerfactory):
+    """Test settings can override message length in lines for command help."""
+    mockbot.settings.help.line_threshold = 5
+
+    provider = providers.Base()
+    provider.setup(mockbot)
+
+    wrapper = triggerfactory.wrapper(
+        mockbot, ':Test!test@example.com PRIVMSG #channel :.help test')
+
+    mockbot.doc['test'] = ([
+            'The command test docstring.',
+            'Second line of docstring.',
+            'Third line of docstring.',
+            'Fourth line of docstring.',
+        ], [
+            '.test', '.test arg', '.test else',
+        ]
+    )
+
+    provider.help_command(wrapper, wrapper._trigger, 'test')
+
+    assert mockbot.backend.message_sent == rawlist(
+        "PRIVMSG #channel :Test: The command test docstring.",
+        "PRIVMSG #channel :Second line of docstring.",
+        "PRIVMSG #channel :Third line of docstring.",
+        "PRIVMSG #channel :Fourth line of docstring.",
+        "PRIVMSG #channel :e.g. .test, .test arg or .test else",
+    )

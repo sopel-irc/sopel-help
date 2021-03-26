@@ -77,9 +77,11 @@ def test_configure(tmpconfig):
     assert 'help' in tmpconfig
     assert hasattr(tmpconfig.help, 'output')
     assert hasattr(tmpconfig.help, 'reply_method')
+    assert hasattr(tmpconfig.help, 'line_threshold')
 
     assert tmpconfig.help.output == 'ubuntu'
     assert tmpconfig.help.reply_method == 'query'
+    assert tmpconfig.help.line_threshold == 3
 
 
 def test_configure_local(tmpconfig):
