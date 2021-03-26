@@ -35,3 +35,8 @@ class HelpSection(config.types.StaticSection):
         'origin_output_dir',
         default='/var/www/html')
     """Where the file will be put on the server to publish the content."""
+
+    line_threshold = config.types.ValidatedAttribute(
+        'line_threshold',
+        default='3')
+    """The maximum length (in lines) that the help for a specific command can be before it is sent in a private message."""
