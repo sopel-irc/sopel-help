@@ -87,11 +87,10 @@ class AbstractGeneratedProvider(AbstractProvider):
     This abstract provider already implements the :meth:`send_help_command`
     that sends the head/body/usage to the user.
     """
-    DEFAULT_THRESHOLD = 3
 
     def get_threshold(self):
         """Get wrap width parameter."""
-        return self.DEFAULT_THRESHOLD
+        return bot.config.line_threshold
 
     def generate_help_commands(self, command_groups):
         """Generate help messages for a set of commands.
