@@ -88,9 +88,6 @@ class AbstractGeneratedProvider(AbstractProvider):
     that sends the head/body/usage to the user.
     """
 
-    def get_threshold(self):
-        """Get wrap width parameter."""
-        return bot.config.line_threshold
 
     def generate_help_commands(self, command_groups):
         """Generate help messages for a set of commands.
@@ -134,7 +131,7 @@ class AbstractGeneratedProvider(AbstractProvider):
         """
         reply, recipient = self.get_reply_method(bot, trigger)
         message_length = len([head] + body) + int(bool(usages))
-        if recipient != trigger.nick and message_length > self.get_threshold():
+        if recipient != trigger.nick and message_length > bot.config.line_threshold:
             reply(
                 "The help for command %s is too long; "
                 "I'm sending it to you in a private message." % command)
