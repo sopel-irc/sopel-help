@@ -18,14 +18,16 @@ coverages: coverage_report coverage_html
 pylint:
 	pylint sopel_help
 
-qa: quality test coverages pylint
+pyroma:
+	pyroma .
+
+qa: quality test coverages pylint pyroma
 
 .PHONY: develop build
 
 develop:
 	pip install -r requirements.txt
 	python setup.py develop
-
 
 build:
 	rm -rf build/ dist/

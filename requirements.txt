@@ -5,3 +5,5 @@ pylint
 coverage
 pytest
 requests-mock
+pyroma
+twine
