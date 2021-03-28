@@ -29,12 +29,14 @@ def _post_content(*args, **kwargs):
             requests.exceptions.TooManyRedirects,
             requests.exceptions.RequestException,
             requests.exceptions.HTTPError
-    ):
+    ) as err:
         # We re-raise all expected exception types to a generic "posting error"
         # that's easy for callers to expect, and then we pass the original
         # exception through to provide some debugging info
         LOGGER.exception('Error during POST request')
-        raise PublishingError('Could not communicate with publishing service')
+        raise PublishingError(
+            'Could not communicate with publishing service'
+        ) from err
 
     # successful response is left to the caller to handle
     return response
@@ -438,15 +440,19 @@ class HasteBinPublisher(AbstractPublisher):
 
         try:
             result = response.json()
-        except ValueError:
+        except ValueError as err:
             LOGGER.error("Invalid Hastebin response %s", response.text)
-            raise PublishingError('Could not parse response from Hastebin!')
+            raise PublishingError(
+                'Could not parse response from Hastebin!'
+            ) from err
 
         try:
             key = result['key']
-        except KeyError:
+        except KeyError as err:
             LOGGER.error("Invalid Hastebin JSON: %s", result)
-            raise PublishingError('Could not parse response from Hastebin!')
+            raise PublishingError(
+                'Could not parse response from Hastebin!'
+            ) from err
 
         return "https://hastebin.com/%s" % key
 
@@ -468,9 +474,9 @@ class TermBinPublisher(AbstractPublisher):
                     break
                 response += data
             sock.close()
-        except socket.error:
+        except socket.error as err:
             LOGGER.exception('Error during communication with termbin')
-            raise PublishingError('Error uploading to termbin')
+            raise PublishingError('Error uploading to termbin') from err
 
         return response
 

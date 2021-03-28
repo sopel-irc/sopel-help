@@ -45,8 +45,8 @@ class Manager:
 
         try:
             entry_point = next(entry_points)
-        except StopIteration:
-            raise RuntimeError('Cannot found help provider %s' % name)
+        except StopIteration as err:
+            raise RuntimeError('Cannot found help provider %s' % name) from err
 
         # 3. load the entry point
         provider_maker = entry_point.load()

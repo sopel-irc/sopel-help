@@ -1,7 +1,7 @@
 .PHONY: qa quality test coverages coverage_report coverage_html pylint
 
 quality:
-	isort -rc sopel_help
+	isort sopel_help
 	flake8
 
 test:
