@@ -17,6 +17,16 @@ The recommanded way to install this plugin is to use ``pip``::
 
 Note that this plugin requires Python 3.5+ and Sopel 7+.
 
+Configure
+=========
+
+As with many other plugins, you can use ``sopel-config`` to launch the
+configuration wizard, like so::
+
+    $ sopel-plugins configure help
+
+Don't forget to use the ``-c <config-name>`` option to select the right config.
+
 Providers
 =========
 
