@@ -26,6 +26,13 @@ def configure(settings):
             reply_method_list)
     )
 
+    if settings.help.reply_method == 'channel':
+        settings.help.configure_setting(
+            'line_threshold',
+            'How many lines can be sent in a channel for a command help '
+            '(default 3)? '
+        )
+
     manager.configure(settings)
 
 

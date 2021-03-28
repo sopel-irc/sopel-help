@@ -89,12 +89,6 @@ class AbstractGeneratedProvider(AbstractProvider):
     This abstract provider already implements the :meth:`send_help_command`
     that sends the head/body/usage to the user.
     """
-    DEFAULT_THRESHOLD = 3
-
-    def get_threshold(self):
-        """Get wrap width parameter."""
-        return self.DEFAULT_THRESHOLD
-
     def generate_help_commands(self, command_groups):
         """Generate help messages for a set of commands.
 
@@ -137,7 +131,10 @@ class AbstractGeneratedProvider(AbstractProvider):
         """
         reply, recipient = self.get_reply_method(bot, trigger)
         message_length = len([head] + body) + int(bool(usages))
-        if recipient != trigger.nick and message_length > self.get_threshold():
+
+        # check if help message is too long for a channel
+        too_long = message_length > bot.settings.help.line_threshold
+        if recipient != trigger.nick and too_long:
             reply(
                 "The help for command %s is too long; "
                 "I'm sending it to you in a private message." % command)

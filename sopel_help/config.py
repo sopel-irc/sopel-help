@@ -35,3 +35,16 @@ class HelpSection(config.types.StaticSection):
         'origin_output_dir',
         default='/var/www/html')
     """Where the file will be put on the server to publish the content."""
+
+    line_threshold = config.types.ValidatedAttribute(
+        'line_threshold',
+        parse=int,
+        default=3)
+    """How many lines can be sent in a channel for a command help.
+
+    This is the size of messages (in number of lines) before the command help
+    is sent as private messages instead of messages to a channel.
+
+    This has no effect when :attr:`reply_method` is set to ``notice`` or
+    ``query``, as these methods don't send their messages in a channel.
+    """
