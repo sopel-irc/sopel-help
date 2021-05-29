@@ -36,7 +36,7 @@ def configure(settings):
     manager.configure(settings)
 
 
-@module.commands('help')
+@module.commands('help', 'h')
 @module.example('.help', user_help=True)
 @module.example('.help help', user_help=True)
 def sopel_help(bot, trigger):
