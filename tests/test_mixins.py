@@ -11,7 +11,10 @@ def test_html_generator_generate_help_commands():
     }))
 
     assert result == [
-        '<h2>GROUP_A</h2><ul><li>command_a_a</li><li>command_a_b</li></ul>',
-        '<h2>GROUP_B</h2><ul><li>command_b_a</li><li>command_b_b</li></ul>',
-        '<h2>GROUP_C</h2><ul><li>command_c_a</li><li>command_c_b</li></ul>',
+        '<h2 id="plugin-group_a"><a href="#plugin-group_a">GROUP_A</a></h2>'
+        '<ul><li>command_a_a</li><li>command_a_b</li></ul>',
+        '<h2 id="plugin-group_b"><a href="#plugin-group_b">GROUP_B</a></h2>'
+        '<ul><li>command_b_a</li><li>command_b_b</li></ul>',
+        '<h2 id="plugin-group_c"><a href="#plugin-group_c">GROUP_C</a></h2>'
+        '<ul><li>command_c_a</li><li>command_c_b</li></ul>',
     ]

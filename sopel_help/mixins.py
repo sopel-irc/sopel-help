@@ -70,8 +70,13 @@ class HTMLGeneratorMixin(PlainTextGeneratorMixin):
         for category, commands in sorted(command_groups.items()):
             # adjust category label to the max length
 
+            title = html.escape(category)
+            anchor = 'plugin-%s' % title.lower()
+
             lines = [
-                '<h2>%s</h2>' % html.escape(category).upper(),
+                '<h2 id="{anchor}">'
+                '<a href="#{anchor}">{title}</a>'
+                '</h2>'.format(anchor=anchor, title=title.upper()),
                 '<ul>'
             ] + [
                 '<li>%s</li>' % html.escape(command)
