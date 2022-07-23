@@ -274,7 +274,7 @@ class LocalFile(mixins.HTMLGeneratorMixin, AbstractGeneratedProvider):
         Note that if the file already exists, its content will be replaced.
         """
         filename = os.path.join(self.output_dir, self.output_name)
-        with open(filename, 'w') as helpfd:
+        with open(filename, 'w', encoding='utf-8') as helpfd:
             helpfd.write(content)
 
         return self.output_name
