@@ -450,17 +450,3 @@ class TermBinPublisher(AbstractPublisher):
             raise PublishingError('Error uploading to termbin') from err
 
         return response
-
-
-class UbuntuPublisher(AbstractPublisher):
-    """Publishing provider using pastebin.ubuntu.com"""
-    def publish(self, bot, trigger, content):
-        ubuntu_url = 'https://pastebin.ubuntu.com/'
-        response = _post_content(ubuntu_url, data={
-            'poster': 'sopel',
-            'syntax': 'text',
-            'expiration': '',
-            'content': content,
-        }, allow_redirects=False)
-        location = response.headers['Location']
-        return urllib.parse.urljoin(ubuntu_url, location)

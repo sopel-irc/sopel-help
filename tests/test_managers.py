@@ -46,7 +46,6 @@ def test_provider_names():
     assert 'clbin' in manager.provider_names
     assert '0x0' in manager.provider_names
     assert 'termbin' in manager.provider_names
-    assert 'ubuntu' in manager.provider_names
 
 
 def test_setup_invalid_provider(tmpconfig, botfactory):

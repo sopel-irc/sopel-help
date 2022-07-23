@@ -71,7 +71,7 @@ def test_help_command_channel(irc, userfactory):
 
 def test_configure(tmpconfig):
     with mock.patch('sopel.config.types.get_input') as mock_input:
-        mock_input.side_effect = ["ubuntu", "query"]
+        mock_input.side_effect = ["base", "query"]
         configure(tmpconfig)
 
     assert 'help' in tmpconfig
@@ -79,14 +79,14 @@ def test_configure(tmpconfig):
     assert hasattr(tmpconfig.help, 'reply_method')
     assert hasattr(tmpconfig.help, 'line_threshold')
 
-    assert tmpconfig.help.output == 'ubuntu'
+    assert tmpconfig.help.output == 'base'
     assert tmpconfig.help.reply_method == 'query'
     assert tmpconfig.help.line_threshold == 3
 
 
 def test_configure_channel(tmpconfig):
     with mock.patch('sopel.config.types.get_input') as mock_input:
-        mock_input.side_effect = ["ubuntu", "channel", "5"]
+        mock_input.side_effect = ["base", "channel", "5"]
         configure(tmpconfig)
 
     assert 'help' in tmpconfig
@@ -94,7 +94,7 @@ def test_configure_channel(tmpconfig):
     assert hasattr(tmpconfig.help, 'reply_method')
     assert hasattr(tmpconfig.help, 'line_threshold')
 
-    assert tmpconfig.help.output == 'ubuntu'
+    assert tmpconfig.help.output == 'base'
     assert tmpconfig.help.reply_method == 'channel'
     assert tmpconfig.help.line_threshold == 5
 
