@@ -1,5 +1,5 @@
 """Sopel Help plugin"""
-from sopel import module
+from sopel import plugin
 
 from sopel_help import config, providers
 from sopel_help.managers import manager
@@ -36,9 +36,9 @@ def configure(settings):
     manager.configure(settings)
 
 
-@module.commands('help', 'h')
-@module.example('.help', user_help=True)
-@module.example('.help help', user_help=True)
+@plugin.commands('help', 'h')
+@plugin.example('.help', user_help=True)
+@plugin.example('.help help', user_help=True)
 def sopel_help(bot, trigger):
     """Generate help for Sopel's commands."""
     if trigger.group(2):
