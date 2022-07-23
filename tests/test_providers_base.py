@@ -1,4 +1,5 @@
 import pytest
+from sopel.plugins import rules
 from sopel.tests import rawlist
 
 from sopel_help import providers
@@ -23,6 +24,14 @@ def tmpconfig(configfactory):
 @pytest.fixture
 def mockbot(tmpconfig, botfactory):
     return botfactory.preloaded(tmpconfig, preloads=['help'])
+
+
+
+def make_fake_command(name, doc=None, examples=tuple(), plugin='test'):
+    return rules.Command(name, plugin=plugin, doc=doc, usages=tuple(
+        {'example': example}  # only the bare minimum
+        for example in examples
+    ))
 
 
 def test_get_reply_method_default(mockbot, triggerfactory):
@@ -312,13 +321,16 @@ def test_help_command(mockbot, triggerfactory):
     wrapper = triggerfactory.wrapper(
         mockbot, ':Test!test@example.com PRIVMSG #channel :.help test')
 
-    mockbot.doc['test'] = ([
+    mockbot.rules.register_command(make_fake_command(
+        name='test',
+        doc='\n'.join([
             'The command test docstring.',
             'Second line of docstring.',
-        ], [
+        ]),
+        examples=(
             '.test', '.test arg', '.test else',
-        ]
-    )
+        ),
+    ))
 
     provider.help_command(wrapper, wrapper._trigger, 'test')
 
@@ -336,13 +348,16 @@ def test_help_command_private(mockbot, triggerfactory):
     wrapper = triggerfactory.wrapper(
         mockbot, ':Test!test@example.com PRIVMSG TestBot :.help test')
 
-    mockbot.doc['test'] = ([
+    mockbot.rules.register_command(make_fake_command(
+        name='test',
+        doc='\n'.join([
             'The command test docstring.',
             'Second line of docstring.',
-        ], [
+        ]),
+        examples=(
             '.test', '.test arg', '.test else',
-        ]
-    )
+        ),
+    ))
 
     provider.help_command(wrapper, wrapper._trigger, 'test')
 
@@ -360,15 +375,18 @@ def test_help_command_too_long(mockbot, triggerfactory):
     wrapper = triggerfactory.wrapper(
         mockbot, ':Test!test@example.com PRIVMSG #channel :.help test')
 
-    mockbot.doc['test'] = ([
+    mockbot.rules.register_command(make_fake_command(
+        name='test',
+        doc='\n'.join([
             'The command test docstring.',
             'Second line of docstring.',
             'Third line of docstring.',
             'Fourth line of docstring.',
-        ], [
+        ]),
+        examples=(
             '.test', '.test arg', '.test else',
-        ]
-    )
+        ),
+    ))
 
     provider.help_command(wrapper, wrapper._trigger, 'test')
 
@@ -393,15 +411,18 @@ def test_help_command_too_long_settings(mockbot, triggerfactory):
     wrapper = triggerfactory.wrapper(
         mockbot, ':Test!test@example.com PRIVMSG #channel :.help test')
 
-    mockbot.doc['test'] = ([
+    mockbot.rules.register_command(make_fake_command(
+        name='test',
+        doc='\n'.join([
             'The command test docstring.',
             'Second line of docstring.',
             'Third line of docstring.',
             'Fourth line of docstring.',
-        ], [
+        ]),
+        examples=(
             '.test', '.test arg', '.test else',
-        ]
-    )
+        ),
+    ))
 
     provider.help_command(wrapper, wrapper._trigger, 'test')
 
