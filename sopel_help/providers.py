@@ -428,32 +428,6 @@ class NullPointerPublisher(AbstractPublisher):
         return response.text.strip()
 
 
-class HasteBinPublisher(AbstractPublisher):
-    """Publishing provider using hastebin.com"""
-    def publish(self, bot, trigger, content):
-        response = _post_content('https://hastebin.com/documents', data={
-            'data': content
-        })
-
-        try:
-            result = response.json()
-        except ValueError as err:
-            LOGGER.error("Invalid Hastebin response %s", response.text)
-            raise PublishingError(
-                'Could not parse response from Hastebin!'
-            ) from err
-
-        try:
-            key = result['key']
-        except KeyError as err:
-            LOGGER.error("Invalid Hastebin JSON: %s", result)
-            raise PublishingError(
-                'Could not parse response from Hastebin!'
-            ) from err
-
-        return "https://hastebin.com/%s" % key
-
-
 class TermBinPublisher(AbstractPublisher):
     """Publishing provider using termbin.com"""
     def publish(self, bot, trigger, content):
