@@ -293,6 +293,7 @@ class LocalFile(mixins.HTMLGeneratorMixin, AbstractGeneratedProvider):
             <head>
                 <title>Sopel Help</title>
                 <meta charset="utf-8">
+                <meta content="light dark" name="color-scheme">
             </head>
             <body>
             <h1>Sopel Help</h1>
