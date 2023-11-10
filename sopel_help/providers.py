@@ -143,9 +143,11 @@ class AbstractGeneratedProvider(AbstractProvider):
 
         reply(head, recipient)
         for line in body:
-            bot.say(line, recipient)
+            if line:
+                bot.say(line, recipient)
         for line in usages:
-            bot.say(line, recipient)
+            if line:
+                bot.say(line, recipient)
 
     def get_reply_method(self, bot, trigger):
         """Define the reply method and its recipient.
