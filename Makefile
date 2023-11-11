@@ -5,7 +5,7 @@ quality:
 	flake8
 
 test:
-	coverage run -m py.test -v .
+	coverage run -m pytest -v .
 
 coverage_report:
 	coverage report
@@ -26,9 +26,9 @@ qa: quality test coverages pylint pyroma
 .PHONY: develop build
 
 develop:
-	pip install -r requirements.txt
-	python setup.py develop
+	pip install -U -r requirements.txt
+	pip install -e .
 
 build:
 	rm -rf build/ dist/
-	python setup.py sdist bdist_wheel
+	python -m build .
