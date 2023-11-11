@@ -15,7 +15,7 @@ The recommanded way to install this plugin is to use ``pip``::
 
     $ pip install sopel-help
 
-Note that this plugin requires Python 3.7+ and Sopel 7.1+.
+Note that this plugin requires Python 3.8+ and Sopel 7.1+.
 
 Configure
 =========
