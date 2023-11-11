@@ -1,4 +1,5 @@
 """Configuration for the help plugin."""
+
 from sopel import config
 
 from sopel_help.managers import manager

@@ -21,8 +21,10 @@ class UnknownCommand(Exception):
 
 
 def _post_content(*args, **kwargs):
+    # ensure we always timeout
+    timeout = kwargs.pop('timeout', 30)
     try:
-        response = requests.post(*args, **kwargs)
+        response = requests.post(*args, timeout=timeout, **kwargs)
         response.raise_for_status()
     except (
             requests.exceptions.Timeout,
