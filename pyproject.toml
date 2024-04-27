@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 platforms = ["Linux x86, x86-64"]
 
 [tool.setuptools.packages.find]
-include = ["sopel_help.*"]
+include = ["sopel_help", "sopel_help.*"]
 namespaces = false
 
 [project]
