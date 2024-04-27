@@ -286,6 +286,44 @@ def test_send_help_commands(mockbot, triggerfactory):
     )
 
 
+def test_send_help_command(mockbot, triggerfactory):
+    provider = providers.Base()
+    provider.setup(mockbot)
+
+    wrapper = triggerfactory.wrapper(
+        mockbot, ':Test!test@example.com PRIVMSG #channel :.help test')
+
+    test_head = 'The command test docstring.'
+    test_body = [
+        "line 1 of body",
+        "",
+        "line 3 of body (ignore empty line 2)",
+    ]
+    test_usages = [
+        "line 1 of usage",
+        "",
+        "line 3 of usage (ignore empty line 2)",
+    ]
+    provider.send_help_command(
+        wrapper,
+        wrapper._trigger,
+        'test',
+        test_head,
+        test_body,
+        test_usages,
+    )
+
+    assert mockbot.backend.message_sent == rawlist(
+        "PRIVMSG #channel :Test: The help for command test is too long; "
+        "I'm sending it to you in a private message.",
+        "PRIVMSG Test :The command test docstring.",
+        "PRIVMSG Test :line 1 of body",
+        "PRIVMSG Test :line 3 of body (ignore empty line 2)",
+        "PRIVMSG Test :line 1 of usage",
+        "PRIVMSG Test :line 3 of usage (ignore empty line 2)",
+    )
+
+
 def test_help_commands(mockbot, triggerfactory):
     provider = providers.Base()
     provider.setup(mockbot)
