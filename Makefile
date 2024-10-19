@@ -29,8 +29,10 @@ coverages: coverage_report coverage_html
 .PHONY: develop qa build
 
 develop:
-	pip install -U -r requirements.txt
-	pip install -e .
+	python -m pip install -U pip
+	python -m pip install -U wheel
+	python -m pip install -U  -r requirements.txt
+	python -m pip install -e .
 
 qa: lint-check test coverages lint-style
 

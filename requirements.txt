@@ -1,7 +1,7 @@
 # requirements for dev
 
 flake8
-pylint
+pylint<3
 coverage
 pytest
 requests-mock
