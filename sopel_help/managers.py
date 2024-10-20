@@ -1,6 +1,6 @@
 """Sopel Help Managers."""
 
-import pkg_resources
+import importlib_metadata
 
 PROVIDERS_ENTRY_POINT = 'sopel_help.providers'
 
@@ -18,8 +18,8 @@ class Manager:
     def provider_names(self):
         """Names of the available providers."""
         if self._provider_list is None:
-            entry_points = pkg_resources.iter_entry_points(
-                PROVIDERS_ENTRY_POINT)
+            entry_points = importlib_metadata.entry_points(
+                group=PROVIDERS_ENTRY_POINT)
             self._provider_list = [
                 entry_point.name
                 for entry_point in entry_points
@@ -37,16 +37,18 @@ class Manager:
         :return: a provider instance
         :rtype: :class:`sopel_help.providers.AbstractProvider`
 
-        The provider will be loaded from an entry point and then instanciated
+        The provider will be loaded from an entry point and then instantiated
         to be returned as is (no setup, no configure).
         """
-        entry_points = pkg_resources.iter_entry_points(
-            PROVIDERS_ENTRY_POINT, name)
+        # 1. get EntryPoints matching the group and name
+        entry_points = importlib_metadata.entry_points(
+            group=PROVIDERS_ENTRY_POINT, name=name)
 
+        # 2. get just the EntryPoint matching `name`
         try:
-            entry_point = next(entry_points)
-        except StopIteration as err:
-            raise RuntimeError('Cannot found help provider %s' % name) from err
+            entry_point = entry_points[name]
+        except KeyError:
+            raise RuntimeError('Cannot find help provider %r' % name) from None
 
         # 3. load the entry point
         provider_maker = entry_point.load()
