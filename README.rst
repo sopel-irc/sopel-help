@@ -35,5 +35,5 @@ There are several providers built-in with this plugin:
 * ``base`` (the default): basic provider; it outputs help directly to the user
 * ``local``: it generates an HTML file and outputs an URL; you have to
   install and configure your own origin server to serve that file
-* ``clbin``, ``0x0``, ``termbin``: all these providers post a plain-text file
+* ``0x0``, ``termbin``: all these providers post a plain-text file
   to a pastebin service and then output the resulting URL
