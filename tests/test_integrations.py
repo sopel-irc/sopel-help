@@ -3,7 +3,6 @@ from unittest import mock
 
 import pytest
 from sopel.tests import rawlist
-from sopel.tools import get_input
 
 from sopel_help.plugin import configure
 
@@ -11,7 +10,9 @@ TMP_CONFIG = """
 [core]
 owner = testnick
 nick = TestBot
-enable = coretasks, help
+enable =
+    coretasks
+    help
 """
 
 
@@ -70,7 +71,7 @@ def test_help_command_channel(irc, userfactory):
 
 
 def test_configure(tmpconfig):
-    with mock.patch('sopel.config.types.get_input') as mock_input:
+    with mock.patch('builtins.input') as mock_input:
         mock_input.side_effect = ["base", "query"]
         configure(tmpconfig)
 
@@ -85,7 +86,7 @@ def test_configure(tmpconfig):
 
 
 def test_configure_channel(tmpconfig):
-    with mock.patch('sopel.config.types.get_input') as mock_input:
+    with mock.patch('builtins.input') as mock_input:
         mock_input.side_effect = ["base", "channel", "5"]
         configure(tmpconfig)
 
@@ -100,7 +101,7 @@ def test_configure_channel(tmpconfig):
 
 
 def test_configure_local(tmpconfig):
-    with mock.patch('sopel.config.types.get_input') as mock_input:
+    with mock.patch('builtins.input') as mock_input:
         mock_input.side_effect = [
             "local",
             "query",
@@ -125,7 +126,7 @@ def test_configure_local(tmpconfig):
 
 
 def test_configure_local_default(tmpconfig):
-    with mock.patch('sopel.config.types.get_input') as mock_input:
+    with mock.patch('builtins.input') as mock_input:
         mock_input.side_effect = [
             "local",
             "query",

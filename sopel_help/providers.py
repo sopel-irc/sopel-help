@@ -5,7 +5,6 @@ import socket
 import urllib
 
 import requests
-
 from sopel.tools import get_logger
 
 from sopel_help import mixins
