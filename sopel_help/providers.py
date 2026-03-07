@@ -416,15 +416,6 @@ class AbstractPublisher(mixins.PlainTextGeneratorMixin,
         raise NotImplementedError
 
 
-class CLBinPublisher(AbstractPublisher):
-    """Publishing provider using clbin.com"""
-    def publish(self, bot, trigger, content):
-        response = _post_content('https://clbin.com/', data={
-            'clbin': content
-        })
-        return response.text.strip()
-
-
 class NullPointerPublisher(AbstractPublisher):
     """Publishing provider using 0x0.st"""
     def publish(self, bot, trigger, content):
@@ -442,12 +433,12 @@ class TermBinPublisher(AbstractPublisher):
         sock.settimeout(10)
         try:
             sock.connect(('termbin.com', 9999))
-            sock.sendall(content)
+            sock.sendall(content.encode('utf-8'))
             sock.shutdown(socket.SHUT_WR)
-            response = ""
+            response = b""
             while 1:
                 data = sock.recv(1024)
-                if data == "":
+                if data == b"":
                     break
                 response += data
             sock.close()
@@ -455,4 +446,4 @@ class TermBinPublisher(AbstractPublisher):
             LOGGER.exception('Error during communication with termbin')
             raise PublishingError('Error uploading to termbin') from err
 
-        return response
+        return response.decode('utf-8').strip()
