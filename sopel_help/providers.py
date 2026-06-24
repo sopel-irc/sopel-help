@@ -29,8 +29,8 @@ def _post_content(*args, **kwargs):
     except (
             requests.exceptions.Timeout,
             requests.exceptions.TooManyRedirects,
+            requests.exceptions.ConnectionError,
             requests.exceptions.RequestException,
-            requests.exceptions.HTTPError
     ) as err:
         # We re-raise all expected exception types to a generic "posting error"
         # that's easy for callers to expect, and then we pass the original
